@@ -1,0 +1,2063 @@
+---
+title: "By : Sachin Sharma"
+output: 
+  flexdashboard::flex_dashboard:
+    navbar:
+      - { icon: "fa-home", href: "https://datasciencexone.com", align: right }
+  
+    orientation: rows
+    vertical_layout: fill
+    social: [ "twitter", "facebook" , "menu"]
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(knitr)
+library(DT)
+library(rpivotTable)
+library(ggplot2)
+library(dplyr)
+library(openintro)
+library(highcharter)
+library(lubridate)
+
+```
+
+
+```{r}
+data <- read.csv("df_crypto.csv")
+
+
+data$Date <- as.POSIXct(data$Date,format = "%m/%d/%Y %H:%M", tz = "UTC") 
+ data$Date <- as.Date(data$Date)
+# 
+ data$Date <- as.POSIXct(data$Date)
+
+
+
+```
+
+```{r}
+mycolors <- c("blue","#FFC125","darkgreen","darkorange")
+```
+
+Top-7 Crypto-currency Analysis
+=======================================
+
+Row
+---------------------------------------
+
+### Price Data Analysis 
+
+```{r}
+valueBox(paste("TOP -7 CRYPTO"),
+         color = "warning")
+```
+
+### Bitcoin Prices
+
+```{r}
+valueBox("01",
+         icon = "fa fa-bitcoin")
+```
+
+### **Ethereum Prices**
+```{r}
+
+valueBox("02",
+         icon = "fab fa-ethereum")
+```
+
+
+### Cardano ADA
+
+```{r}
+valueBox("03",
+         icon = "ion-load-b")
+```
+
+
+
+### Binance Coin- bnb 
+
+```{r}
+valueBox("04",
+         icon = "ion-network")
+```
+
+
+
+### Doge 
+
+```{r}
+valueBox("05",
+         icon = "fa-building")
+```
+
+
+
+### Tether 
+
+```{r}
+valueBox("06",
+         icon = "ion-network")
+```
+
+
+
+### XRP
+
+```{r}
+valueBox("07",
+         icon = "fa-building")
+```
+
+
+### Row 
+------------------------------------
+
+### PLOT 1 
+
+
+```{r}
+library(plotly)
+
+ p1 <- data %>% subset(Date < "2020-12-31" & Date > "2019-01-01 " ) %>%  group_by(AssetID) %>% summarise(mean=  mean(Price)) %>% plot_ly(x = ~AssetID,
+                                                                          y =~mean,
+                                                                          color = "blue",
+                                                                          type = "bar") %>% layout(xaxis = list(title = "Name of Crypto"), yaxis = list(title = "Average Price"))
+p1
+```
+### Volumetric Trading of Crypto Coins 
+
+```{r}
+p2 <- data %>%  group_by(AssetID) %>% summarise(Vol. = n()) %>% plot_ly(labels = ~ AssetID, values = ~Vol.,marker = list(colors = mycolors)) %>% add_pie(hole = 0.2 ) %>% layout(xaxis = list(zeroline = F, showline = F, showticklabels = F, showgrid = F))
+p2
+```
+
+### Mean High Price Comparison B/W btc,ether & bnb 
+```{r}
+
+p3 <- data %>% group_by(AssetID) %>% summarise(High = mean(High)) %>% filter(AssetID == "btc" | AssetID =="ether" | AssetID == "bnb")   %>% plot_ly(x = ~AssetID, y = ~High, type ="bar" )%>%  layout(xaxis = list(title = "AssetId"), yaxis = list(title = " Mean High Price Comparison"))
+
+p3
+```
+
+
+### Row 
+------------------------------------
+
+
+### Volumetric trading during the past four years 
+```{r}
+plot_ly(data = data, x = ~AssetID, y = ~Vol., color = ~AssetID )
+```
+
+### Monthly low price comparison of crypto coins during the year 2020
+```{r}
+
+
+df_2020 <- filter(data, data$Date >="2020-01-01 05:30:00")
+plot_ly(df_2020, 
+            x=data$AssetID, 
+            y=data$Date, 
+            z=data$Low, 
+            type="scatter3d", 
+            mode="markers", 
+            color=data$AssetID)
+
+```
+
+
+
+
+
+BITCOIN
+=================================
+BTC
+---------------------------------
+
+```{r}
+library(DT)
+df_btc <- filter(data, data$AssetID =="btc")
+
+df_btc %>%  datatable(extensions = 'Buttons',
+            options = list(dom = 'Blfrtip',
+                           buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                           lengthMenu = list(c(10,25,50,-1),
+                                             c(10,25,50,"All"))))
+
+
+
+
+# CREATING DATAFRAME FOR BTC 2017 , 2018, 2019,2020 separately for mean values and then merge it into single dataframe : 
+
+# BTC 2017
+# for making mean volume column : 
+
+
+
+df_btc_2017 <- df_btc  %>%  filter(df_btc$Date < "2018-01-01" )
+
+
+# for making mean price column : 
+
+df_btc_2017_meanprice<-   df_btc_2017 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_btc_2017_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_btc_2017_meanprice["Year"]<-"2017"
+df_btc_2017_meanprice$Year <- as.factor(df_btc_2017_meanprice$Year)
+
+
+df_btc_2017_vol<-   df_btc_2017 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_btc_2017_vol) <- c("AssetID", "Volume")
+
+#datatable(df_btc, options = list(pageLength = 10))
+
+df_btc_2017_vol["Year"]<-"2017"
+df_btc_2017_vol$Year <- as.factor(df_btc_2017_vol$Year)
+
+
+
+# for making mean High column : 
+
+df_btc_2017_high<-   df_btc_2017 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_btc_2017_high) <- c("AssetID", "High")
+
+#datatable(df_btc, options = list(pageLength = 10))
+
+df_btc_2017_high["Year"]<-"2017"
+df_btc_2017_high$Year <- as.factor(df_btc_2017_high$Year)
+
+
+
+df_btc_2017_f <- inner_join(df_btc_2017_meanprice,df_btc_2017_vol)
+
+
+df_btc_2017_f <- inner_join(df_btc_2017_f, df_btc_2017_high)
+
+df_btc_2017_f <- df_btc_2017_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# BTC 2018
+
+
+df_btc_2018 <- df_btc  %>%  filter((df_btc$Date < "2019-01-01" ) & (df_btc$Date > "2017-12-31"))
+
+
+df_btc_2018_meanprice<-   df_btc_2018 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_btc_2018_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_btc_2018_meanprice["Year"]<-"2018"
+df_btc_2018_meanprice$Year <- as.factor(df_btc_2018_meanprice$Year)
+
+
+
+
+df_btc_2018_vol<-   df_btc_2018 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_btc_2018_vol) <- c("AssetID", "Volume")
+
+#datatable(df_btc, options = list(pageLength = 10))
+
+df_btc_2018_vol["Year"]<-"2018"
+df_btc_2018_vol$Year <- as.factor(df_btc_2018_vol$Year)
+
+
+
+
+df_btc_2018_high<-   df_btc_2018 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_btc_2018_high) <- c("AssetID", "High")
+
+#datatable(df_btc, options = list(pageLength = 10))
+
+df_btc_2018_high["Year"]<-"2018"
+df_btc_2018_high$Year <- as.factor(df_btc_2018_high$Year)
+
+
+
+df_btc_2018_f <- inner_join(df_btc_2018_meanprice,df_btc_2018_vol)
+
+
+
+df_btc_2018_f <- inner_join(df_btc_2018_f,df_btc_2018_high)
+
+
+df_btc_2018_f <- df_btc_2018_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# BTC 2019
+# for making mean volume column : 
+
+
+df_btc_2019 <- df_btc  %>%  filter((df_btc$Date < "2020-01-01" ) & (df_btc$Date > "2018-12-31"))
+
+
+df_btc_2019_meanprice<-   df_btc_2019 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_btc_2019_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_btc_2019_meanprice["Year"]<-"2019"
+df_btc_2019_meanprice$Year <- as.factor(df_btc_2019_meanprice$Year)
+
+
+
+
+df_btc_2019_vol<-   df_btc_2019 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_btc_2019_vol) <- c("AssetID", "Volume")
+
+#datatable(df_btc, options = list(pageLength = 10))
+
+df_btc_2019_vol["Year"]<-"2019"
+df_btc_2019_vol$Year <- as.factor(df_btc_2019_vol$Year)
+
+
+
+
+df_btc_2019_high<-   df_btc_2019 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_btc_2019_high) <- c("AssetID", "High")
+
+#datatable(df_btc, options = list(pageLength = 10))
+
+df_btc_2019_high["Year"]<-"2019"
+df_btc_2019_high$Year <- as.factor(df_btc_2019_high$Year)
+
+
+
+df_btc_2019_f <- inner_join(df_btc_2019_meanprice,df_btc_2019_vol)
+
+
+
+df_btc_2019_f <- inner_join(df_btc_2019_f,df_btc_2019_high)
+
+
+df_btc_2019_f <- df_btc_2019_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# BTC 2020
+# for making mean volume column : 
+
+
+df_btc_2020 <- df_btc  %>%  filter(df_btc$Date > "2019-12-31")
+
+
+
+df_btc_2020_meanprice<-   df_btc_2020 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_btc_2020_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_btc_2020_meanprice["Year"]<-"2020"
+df_btc_2020_meanprice$Year <- as.factor(df_btc_2020_meanprice$Year)
+
+
+
+
+df_btc_2020_vol<-   df_btc_2020 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_btc_2020_vol) <- c("AssetID", "Volume")
+
+#datatable(df_btc, options = list(pageLength = 10))
+
+df_btc_2020_vol["Year"]<-"2020"
+df_btc_2020_vol$Year <- as.factor(df_btc_2020_vol$Year)
+
+
+
+
+df_btc_2020_high<-   df_btc_2020 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_btc_2020_high) <- c("AssetID", "High")
+
+#datatable(df_btc, options = list(pageLength = 10))
+
+df_btc_2020_high["Year"]<-"2020"
+df_btc_2020_high$Year <- as.factor(df_btc_2020_high$Year)
+
+
+
+df_btc_2020_f <- inner_join(df_btc_2020_meanprice,df_btc_2020_vol)
+
+
+
+df_btc_2020_f <- inner_join(df_btc_2020_f,df_btc_2020_high)
+
+
+df_btc_2020_f <- df_btc_2020_f %>% relocate(MeanPrice,.after= Year)
+
+
+df_bitcoin_final <- rbind(df_btc_2017_f,df_btc_2018_f,df_btc_2019_f,df_btc_2020_f)
+
+
+```
+
+### Row 
+------------------------------------
+
+### Average price comparison of Bitcoin during the past four years: 
+
+```{r}
+
+fig_btc1 <- plot_ly(df_bitcoin_final , x = ~Year, y = ~MeanPrice, type = 'bar') %>% add_trace(df_bitcoin_final , x = ~Year, y = ~MeanPrice, type = 'scatter',  mode = 'lines+markers')  %>% layout(title = "Mean Price Comparison of BTC" ,xaxis = list(title = "Year"), yaxis = list(title = " Mean High Price "))
+
+
+#fig_btc1 <- plot_ly(df_bitcoin_final , x = ~Year, y = ~MeanPrice, type = 'scatter', mode = "lines+markers") 
+
+
+
+
+fig_btc1
+```
+
+
+### Volume trading during the past four years 
+
+```{r}
+
+
+fig_btc2 <- plot_ly(df_bitcoin_final , x = ~Year, y = ~Volume, type = 'scatter', mode = "lines+markers")  %>% layout(title = "Volume Traded BTC" ,xaxis = list(title = "Year"), yaxis = list(title = " Mean Volume Traded "))
+
+
+
+
+fig_btc2
+```
+
+
+
+
+
+ETHEREUM
+=================================
+ETHER
+---------------------------------
+
+```{r}
+
+library(DT)
+
+df_ether <- filter(data, data$AssetID =="ether")
+
+df_ether %>%  datatable(extensions = 'Buttons',
+            options = list(dom = 'Blfrtip',
+                           buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                           lengthMenu = list(c(10,25,50,-1),
+                                             c(10,25,50,"All"))))
+
+#datatable(df_ether, options = list(pageLength = 10))
+
+
+
+# CREATING DATAFRAME FOR ether 2017 , 2018, 2019,2020 separately for mean values and then merge it into single dataframe : 
+
+# ether 2017
+# for making mean volume column : 
+
+
+
+df_ether_2017 <- df_ether  %>%  filter(df_ether$Date < "2018-01-01" )
+
+
+# for making mean price column : 
+
+df_ether_2017_meanprice<-   df_ether_2017 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_ether_2017_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_ether_2017_meanprice["Year"]<-"2017"
+df_ether_2017_meanprice$Year <- as.factor(df_ether_2017_meanprice$Year)
+
+
+df_ether_2017_vol<-   df_ether_2017 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_ether_2017_vol) <- c("AssetID", "Volume")
+
+#datatable(df_ether, options = list(pageLength = 10))
+
+df_ether_2017_vol["Year"]<-"2017"
+df_ether_2017_vol$Year <- as.factor(df_ether_2017_vol$Year)
+
+
+
+# for making mean High column : 
+
+df_ether_2017_high<-   df_ether_2017 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_ether_2017_high) <- c("AssetID", "High")
+
+#datatable(df_ether, options = list(pageLength = 10))
+
+df_ether_2017_high["Year"]<-"2017"
+df_ether_2017_high$Year <- as.factor(df_ether_2017_high$Year)
+
+
+
+df_ether_2017_f <- inner_join(df_ether_2017_meanprice,df_ether_2017_vol)
+
+
+df_ether_2017_f <- inner_join(df_ether_2017_f, df_ether_2017_high)
+
+df_ether_2017_f <- df_ether_2017_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# ether 2018
+
+
+df_ether_2018 <- df_ether  %>%  filter((df_ether$Date < "2019-01-01" ) & (df_ether$Date > "2017-12-31"))
+
+
+df_ether_2018_meanprice<-   df_ether_2018 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_ether_2018_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_ether_2018_meanprice["Year"]<-"2018"
+df_ether_2018_meanprice$Year <- as.factor(df_ether_2018_meanprice$Year)
+
+
+
+
+df_ether_2018_vol<-   df_ether_2018 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_ether_2018_vol) <- c("AssetID", "Volume")
+
+#datatable(df_ether, options = list(pageLength = 10))
+
+df_ether_2018_vol["Year"]<-"2018"
+df_ether_2018_vol$Year <- as.factor(df_ether_2018_vol$Year)
+
+
+
+
+df_ether_2018_high<-   df_ether_2018 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_ether_2018_high) <- c("AssetID", "High")
+
+#datatable(df_ether, options = list(pageLength = 10))
+
+df_ether_2018_high["Year"]<-"2018"
+df_ether_2018_high$Year <- as.factor(df_ether_2018_high$Year)
+
+
+
+df_ether_2018_f <- inner_join(df_ether_2018_meanprice,df_ether_2018_vol)
+
+
+
+df_ether_2018_f <- inner_join(df_ether_2018_f,df_ether_2018_high)
+
+
+df_ether_2018_f <- df_ether_2018_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# ether 2019
+# for making mean volume column : 
+
+
+df_ether_2019 <- df_ether  %>%  filter((df_ether$Date < "2020-01-01" ) & (df_ether$Date > "2018-12-31"))
+
+
+df_ether_2019_meanprice<-   df_ether_2019 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_ether_2019_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_ether_2019_meanprice["Year"]<-"2019"
+df_ether_2019_meanprice$Year <- as.factor(df_ether_2019_meanprice$Year)
+
+
+
+
+df_ether_2019_vol<-   df_ether_2019 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_ether_2019_vol) <- c("AssetID", "Volume")
+
+#datatable(df_ether, options = list(pageLength = 10))
+
+df_ether_2019_vol["Year"]<-"2019"
+df_ether_2019_vol$Year <- as.factor(df_ether_2019_vol$Year)
+
+
+
+
+df_ether_2019_high<-   df_ether_2019 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_ether_2019_high) <- c("AssetID", "High")
+
+#datatable(df_ether, options = list(pageLength = 10))
+
+df_ether_2019_high["Year"]<-"2019"
+df_ether_2019_high$Year <- as.factor(df_ether_2019_high$Year)
+
+
+
+df_ether_2019_f <- inner_join(df_ether_2019_meanprice,df_ether_2019_vol)
+
+
+
+df_ether_2019_f <- inner_join(df_ether_2019_f,df_ether_2019_high)
+
+
+df_ether_2019_f <- df_ether_2019_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# ether 2020
+# for making mean volume column : 
+
+
+df_ether_2020 <- df_ether  %>%  filter(df_ether$Date > "2019-12-31")
+
+
+
+df_ether_2020_meanprice<-   df_ether_2020 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_ether_2020_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_ether_2020_meanprice["Year"]<-"2020"
+df_ether_2020_meanprice$Year <- as.factor(df_ether_2020_meanprice$Year)
+
+
+
+
+df_ether_2020_vol<-   df_ether_2020 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_ether_2020_vol) <- c("AssetID", "Volume")
+
+#datatable(df_ether, options = list(pageLength = 10))
+
+df_ether_2020_vol["Year"]<-"2020"
+df_ether_2020_vol$Year <- as.factor(df_ether_2020_vol$Year)
+
+
+
+
+df_ether_2020_high<-   df_ether_2020 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_ether_2020_high) <- c("AssetID", "High")
+
+#datatable(df_ether, options = list(pageLength = 10))
+
+df_ether_2020_high["Year"]<-"2020"
+df_ether_2020_high$Year <- as.factor(df_ether_2020_high$Year)
+
+
+
+df_ether_2020_f <- inner_join(df_ether_2020_meanprice,df_ether_2020_vol)
+
+
+
+df_ether_2020_f <- inner_join(df_ether_2020_f,df_ether_2020_high)
+
+
+df_ether_2020_f <- df_ether_2020_f %>% relocate(MeanPrice,.after= Year)
+
+
+df_ether_final <- rbind(df_ether_2017_f,df_ether_2018_f,df_ether_2019_f,df_ether_2020_f)
+
+
+
+```
+
+
+
+
+### Row 
+------------------------------------
+
+### Average price comparison of Ethereum during the past four years: 
+
+```{r}
+
+fig_ether1 <- plot_ly(df_ether_final , x = ~Year, y = ~MeanPrice, type = 'bar') %>% add_trace(df_bitcoin_final , x = ~Year, y = ~MeanPrice, type = 'scatter',  mode = 'lines+markers')  %>% layout(title = "Mean Price Comparison of Ether" ,xaxis = list(title = "Year"), yaxis = list(title = " Mean High Price "))
+
+
+#fig_btc1 <- plot_ly(df_bitcoin_final , x = ~Year, y = ~MeanPrice, type = 'scatter', mode = "lines+markers") 
+
+
+
+
+fig_ether1
+```
+
+
+
+### Maximum High Achieved During Years
+
+```{r}
+
+
+fig_ether2 <- plot_ly(df_ether_final , x = ~Year, y = ~High, type = 'scatter', mode = "lines+markers")  %>% layout(title = "Maximum High Achieved During Years" ,xaxis = list(title = "Year"), yaxis = list(title = " Mean Volume Traded "))
+
+
+
+
+fig_ether2
+
+```
+
+CARDANO
+=================================
+ADA
+---------------------------------
+
+```{r}
+
+
+library(DT)
+
+df_ada <- filter(data, data$AssetID =="ada")
+
+df_ada %>%  datatable(extensions = 'Buttons',
+            options = list(dom = 'Blfrtip',
+                           buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                           lengthMenu = list(c(10,25,50,-1),
+                                             c(10,25,50,"All"))))
+
+
+
+#datatable(df_ada, options = list(pageLength = 10))
+
+# CREATING DATAFRAME FOR ada 2017 , 2018, 2019,2020 separately for mean values and then merge it into single dataframe : 
+
+# ada 2017
+# for making mean volume column : 
+
+
+
+df_ada_2017 <- df_ada  %>%  filter(df_ada$Date < "2018-01-01" )
+
+
+# for making mean price column : 
+
+df_ada_2017_meanprice<-   df_ada_2017 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_ada_2017_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_ada_2017_meanprice["Year"]<-"2017"
+df_ada_2017_meanprice$Year <- as.factor(df_ada_2017_meanprice$Year)
+
+
+df_ada_2017_vol<-   df_ada_2017 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_ada_2017_vol) <- c("AssetID", "Volume")
+
+#datatable(df_ada, options = list(pageLength = 10))
+
+df_ada_2017_vol["Year"]<-"2017"
+df_ada_2017_vol$Year <- as.factor(df_ada_2017_vol$Year)
+
+
+
+# for making mean High column : 
+
+df_ada_2017_high<-   df_ada_2017 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_ada_2017_high) <- c("AssetID", "High")
+
+#datatable(df_ada, options = list(pageLength = 10))
+
+df_ada_2017_high["Year"]<-"2017"
+df_ada_2017_high$Year <- as.factor(df_ada_2017_high$Year)
+
+
+
+df_ada_2017_f <- inner_join(df_ada_2017_meanprice,df_ada_2017_vol)
+
+
+df_ada_2017_f <- inner_join(df_ada_2017_f, df_ada_2017_high)
+
+df_ada_2017_f <- df_ada_2017_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# ada 2018
+
+
+df_ada_2018 <- df_ada  %>%  filter((df_ada$Date < "2019-01-01" ) & (df_ada$Date > "2017-12-31"))
+
+
+df_ada_2018_meanprice<-   df_ada_2018 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_ada_2018_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_ada_2018_meanprice["Year"]<-"2018"
+df_ada_2018_meanprice$Year <- as.factor(df_ada_2018_meanprice$Year)
+
+
+
+
+df_ada_2018_vol<-   df_ada_2018 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_ada_2018_vol) <- c("AssetID", "Volume")
+
+#datatable(df_ada, options = list(pageLength = 10))
+
+df_ada_2018_vol["Year"]<-"2018"
+df_ada_2018_vol$Year <- as.factor(df_ada_2018_vol$Year)
+
+
+
+
+df_ada_2018_high<-   df_ada_2018 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_ada_2018_high) <- c("AssetID", "High")
+
+#datatable(df_ada, options = list(pageLength = 10))
+
+df_ada_2018_high["Year"]<-"2018"
+df_ada_2018_high$Year <- as.factor(df_ada_2018_high$Year)
+
+
+
+df_ada_2018_f <- inner_join(df_ada_2018_meanprice,df_ada_2018_vol)
+
+
+
+df_ada_2018_f <- inner_join(df_ada_2018_f,df_ada_2018_high)
+
+
+df_ada_2018_f <- df_ada_2018_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# ada 2019
+# for making mean volume column : 
+
+
+df_ada_2019 <- df_ada  %>%  filter((df_ada$Date < "2020-01-01" ) & (df_ada$Date > "2018-12-31"))
+
+
+df_ada_2019_meanprice<-   df_ada_2019 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_ada_2019_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_ada_2019_meanprice["Year"]<-"2019"
+df_ada_2019_meanprice$Year <- as.factor(df_ada_2019_meanprice$Year)
+
+
+
+
+df_ada_2019_vol<-   df_ada_2019 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_ada_2019_vol) <- c("AssetID", "Volume")
+
+#datatable(df_ada, options = list(pageLength = 10))
+
+df_ada_2019_vol["Year"]<-"2019"
+df_ada_2019_vol$Year <- as.factor(df_ada_2019_vol$Year)
+
+
+
+
+df_ada_2019_high<-   df_ada_2019 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_ada_2019_high) <- c("AssetID", "High")
+
+#datatable(df_ada, options = list(pageLength = 10))
+
+df_ada_2019_high["Year"]<-"2019"
+df_ada_2019_high$Year <- as.factor(df_ada_2019_high$Year)
+
+
+
+df_ada_2019_f <- inner_join(df_ada_2019_meanprice,df_ada_2019_vol)
+
+
+
+df_ada_2019_f <- inner_join(df_ada_2019_f,df_ada_2019_high)
+
+
+df_ada_2019_f <- df_ada_2019_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# ada 2020
+# for making mean volume column : 
+
+
+df_ada_2020 <- df_ada  %>%  filter(df_ada$Date > "2019-12-31")
+
+
+
+df_ada_2020_meanprice<-   df_ada_2020 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_ada_2020_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_ada_2020_meanprice["Year"]<-"2020"
+df_ada_2020_meanprice$Year <- as.factor(df_ada_2020_meanprice$Year)
+
+
+
+
+df_ada_2020_vol<-   df_ada_2020 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_ada_2020_vol) <- c("AssetID", "Volume")
+
+#datatable(df_ada, options = list(pageLength = 10))
+
+df_ada_2020_vol["Year"]<-"2020"
+df_ada_2020_vol$Year <- as.factor(df_ada_2020_vol$Year)
+
+
+
+
+df_ada_2020_high<-   df_ada_2020 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_ada_2020_high) <- c("AssetID", "High")
+
+#datatable(df_ada, options = list(pageLength = 10))
+
+df_ada_2020_high["Year"]<-"2020"
+df_ada_2020_high$Year <- as.factor(df_ada_2020_high$Year)
+
+
+
+df_ada_2020_f <- inner_join(df_ada_2020_meanprice,df_ada_2020_vol)
+
+
+
+df_ada_2020_f <- inner_join(df_ada_2020_f,df_ada_2020_high)
+
+
+df_ada_2020_f <- df_ada_2020_f %>% relocate(MeanPrice,.after= Year)
+
+
+df_ada_final <- rbind(df_ada_2017_f,df_ada_2018_f,df_ada_2019_f,df_ada_2020_f)
+
+
+```
+
+
+
+### Row 
+------------------------------------
+
+### Average price comparison of ADA during the past four years: 
+
+```{r}
+
+fig_ada1 <- plot_ly(df_ada_final , x = ~Year, y = ~MeanPrice, type = 'bar') %>% add_trace(df_ada_final , x = ~Year, y = ~MeanPrice, type = 'scatter',  mode = 'lines+markers')  %>% layout(title = "Mean Price Comparison of ADA" ,xaxis = list(title = "Year"), yaxis = list(title = " Mean High Price "))
+
+
+#fig_btc1 <- plot_ly(df_bitcoin_final , x = ~Year, y = ~MeanPrice, type = 'scatter', mode = "lines+markers") 
+
+
+
+
+fig_ada1
+```
+
+
+
+### Maximum High Achieved During Years
+
+```{r}
+
+
+fig_ada2 <- plot_ly(df_ada_final , x = ~Year, y = ~High, type = 'scatter', mode = "lines+markers")  %>% layout(title = "Maximum High Achieved During Years" ,xaxis = list(title = "Year"), yaxis = list(title = " Mean Volume Traded "))
+
+
+
+
+fig_ada2
+
+```
+
+BINANCE
+=================================
+BNB
+---------------------------------
+
+```{r}
+
+
+library(DT)
+
+df_bnb <- filter(data, data$AssetID =="bnb")
+
+df_bnb %>%  datatable(extensions = 'Buttons',
+            options = list(dom = 'Blfrtip',
+                           buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                           lengthMenu = list(c(10,25,50,-1),
+                                             c(10,25,50,"All"))))
+
+#datatable(df_bnb, options = list(pageLength = 10))
+
+
+# CREATING DATAFRAME FOR bnb 2017 , 2018, 2019,2020 separately for mean values and then merge it into single dataframe : 
+
+# bnb 2017
+# for making mean volume column : 
+
+
+
+df_bnb_2017 <- df_bnb  %>%  filter(df_bnb$Date < "2018-01-01" )
+
+
+# for making mean price column : 
+
+df_bnb_2017_meanprice<-   df_bnb_2017 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_bnb_2017_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_bnb_2017_meanprice["Year"]<-"2017"
+df_bnb_2017_meanprice$Year <- as.factor(df_bnb_2017_meanprice$Year)
+
+
+df_bnb_2017_vol<-   df_bnb_2017 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_bnb_2017_vol) <- c("AssetID", "Volume")
+
+#datatable(df_bnb, options = list(pageLength = 10))
+
+df_bnb_2017_vol["Year"]<-"2017"
+df_bnb_2017_vol$Year <- as.factor(df_bnb_2017_vol$Year)
+
+
+
+# for making mean High column : 
+
+df_bnb_2017_high<-   df_bnb_2017 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_bnb_2017_high) <- c("AssetID", "High")
+
+#datatable(df_bnb, options = list(pageLength = 10))
+
+df_bnb_2017_high["Year"]<-"2017"
+df_bnb_2017_high$Year <- as.factor(df_bnb_2017_high$Year)
+
+
+
+df_bnb_2017_f <- inner_join(df_bnb_2017_meanprice,df_bnb_2017_vol)
+
+
+df_bnb_2017_f <- inner_join(df_bnb_2017_f, df_bnb_2017_high)
+
+df_bnb_2017_f <- df_bnb_2017_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# bnb 2018
+
+
+df_bnb_2018 <- df_bnb  %>%  filter((df_bnb$Date < "2019-01-01" ) & (df_bnb$Date > "2017-12-31"))
+
+
+df_bnb_2018_meanprice<-   df_bnb_2018 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_bnb_2018_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_bnb_2018_meanprice["Year"]<-"2018"
+df_bnb_2018_meanprice$Year <- as.factor(df_bnb_2018_meanprice$Year)
+
+
+
+
+df_bnb_2018_vol<-   df_bnb_2018 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_bnb_2018_vol) <- c("AssetID", "Volume")
+
+#datatable(df_bnb, options = list(pageLength = 10))
+
+df_bnb_2018_vol["Year"]<-"2018"
+df_bnb_2018_vol$Year <- as.factor(df_bnb_2018_vol$Year)
+
+
+
+
+df_bnb_2018_high<-   df_bnb_2018 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_bnb_2018_high) <- c("AssetID", "High")
+
+#datatable(df_bnb, options = list(pageLength = 10))
+
+df_bnb_2018_high["Year"]<-"2018"
+df_bnb_2018_high$Year <- as.factor(df_bnb_2018_high$Year)
+
+
+
+df_bnb_2018_f <- inner_join(df_bnb_2018_meanprice,df_bnb_2018_vol)
+
+
+
+df_bnb_2018_f <- inner_join(df_bnb_2018_f,df_bnb_2018_high)
+
+
+df_bnb_2018_f <- df_bnb_2018_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# bnb 2019
+# for making mean volume column : 
+
+
+df_bnb_2019 <- df_bnb  %>%  filter((df_bnb$Date < "2020-01-01" ) & (df_bnb$Date > "2018-12-31"))
+
+
+df_bnb_2019_meanprice<-   df_bnb_2019 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_bnb_2019_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_bnb_2019_meanprice["Year"]<-"2019"
+df_bnb_2019_meanprice$Year <- as.factor(df_bnb_2019_meanprice$Year)
+
+
+
+
+df_bnb_2019_vol<-   df_bnb_2019 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_bnb_2019_vol) <- c("AssetID", "Volume")
+
+#datatable(df_bnb, options = list(pageLength = 10))
+
+df_bnb_2019_vol["Year"]<-"2019"
+df_bnb_2019_vol$Year <- as.factor(df_bnb_2019_vol$Year)
+
+
+
+
+df_bnb_2019_high<-   df_bnb_2019 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_bnb_2019_high) <- c("AssetID", "High")
+
+#datatable(df_bnb, options = list(pageLength = 10))
+
+df_bnb_2019_high["Year"]<-"2019"
+df_bnb_2019_high$Year <- as.factor(df_bnb_2019_high$Year)
+
+
+
+df_bnb_2019_f <- inner_join(df_bnb_2019_meanprice,df_bnb_2019_vol)
+
+
+
+df_bnb_2019_f <- inner_join(df_bnb_2019_f,df_bnb_2019_high)
+
+
+df_bnb_2019_f <- df_bnb_2019_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# bnb 2020
+# for making mean volume column : 
+
+
+df_bnb_2020 <- df_bnb  %>%  filter(df_bnb$Date > "2019-12-31")
+
+
+
+df_bnb_2020_meanprice<-   df_bnb_2020 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_bnb_2020_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_bnb_2020_meanprice["Year"]<-"2020"
+df_bnb_2020_meanprice$Year <- as.factor(df_bnb_2020_meanprice$Year)
+
+
+
+
+df_bnb_2020_vol<-   df_bnb_2020 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_bnb_2020_vol) <- c("AssetID", "Volume")
+
+#datatable(df_bnb, options = list(pageLength = 10))
+
+df_bnb_2020_vol["Year"]<-"2020"
+df_bnb_2020_vol$Year <- as.factor(df_bnb_2020_vol$Year)
+
+
+
+
+df_bnb_2020_high<-   df_bnb_2020 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_bnb_2020_high) <- c("AssetID", "High")
+
+#datatable(df_bnb, options = list(pageLength = 10))
+
+df_bnb_2020_high["Year"]<-"2020"
+df_bnb_2020_high$Year <- as.factor(df_bnb_2020_high$Year)
+
+
+
+df_bnb_2020_f <- inner_join(df_bnb_2020_meanprice,df_bnb_2020_vol)
+
+
+
+df_bnb_2020_f <- inner_join(df_bnb_2020_f,df_bnb_2020_high)
+
+
+df_bnb_2020_f <- df_bnb_2020_f %>% relocate(MeanPrice,.after= Year)
+
+
+df_bnb_final <- rbind(df_bnb_2017_f,df_bnb_2018_f,df_bnb_2019_f,df_bnb_2020_f)
+
+
+```
+
+
+### Row 
+------------------------------------
+
+### Average price comparison of Ethereum during the past four years: 
+
+```{r}
+
+fig_bnb1 <- plot_ly(df_bnb_final , x = ~Year, y = ~MeanPrice, type = 'bar') %>% add_trace(df_bnb_final , x = ~Year, y = ~MeanPrice, type = 'scatter',  mode = 'lines+markers')  %>% layout(title = "Mean Price Comparison of BNB" ,xaxis = list(title = "Year"), yaxis = list(title = " Mean High Price "))
+
+
+#fig_btc1 <- plot_ly(df_bitcoin_final , x = ~Year, y = ~MeanPrice, type = 'scatter', mode = "lines+markers") 
+
+
+
+
+fig_bnb1
+```
+
+
+
+### Maximum High Achieved During Years
+
+```{r}
+
+
+fig_bnb2 <- plot_ly(df_bnb_final , x = ~Year, y = ~High, type = 'scatter', mode = "lines+markers")  %>% layout(title = "Maximum High Achieved During Years" ,xaxis = list(title = "Year"), yaxis = list(title = " Mean Volume Traded "))
+
+
+
+
+fig_bnb2
+
+```
+
+
+DOGE
+=================================
+DOGE
+---------------------------------
+
+```{r}
+
+
+library(DT)
+
+df_doge <- filter(data, data$AssetID =="doge")
+
+df_doge %>%  datatable(extensions = 'Buttons',
+            options = list(dom = 'Blfrtip',
+                           buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                           lengthMenu = list(c(10,25,50,-1),
+                                             c(10,25,50,"All"))))
+
+
+#datatable(df_doge, options = list(pageLength = 10))
+
+
+# CREATING DATAFRAME FOR doge 2017 , 2018, 2019,2020 separately for mean values and then merge it into single dataframe : 
+
+# doge 2017
+# for making mean volume column : 
+
+
+
+df_doge_2017 <- df_doge  %>%  filter(df_doge$Date < "2018-01-01" )
+
+
+# for making mean price column : 
+
+df_doge_2017_meanprice<-   df_doge_2017 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_doge_2017_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_doge_2017_meanprice["Year"]<-"2017"
+df_doge_2017_meanprice$Year <- as.factor(df_doge_2017_meanprice$Year)
+
+
+df_doge_2017_vol<-   df_doge_2017 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_doge_2017_vol) <- c("AssetID", "Volume")
+
+#datatable(df_doge, options = list(pageLength = 10))
+
+df_doge_2017_vol["Year"]<-"2017"
+df_doge_2017_vol$Year <- as.factor(df_doge_2017_vol$Year)
+
+
+
+# for making mean High column : 
+
+df_doge_2017_high<-   df_doge_2017 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_doge_2017_high) <- c("AssetID", "High")
+
+#datatable(df_doge, options = list(pageLength = 10))
+
+df_doge_2017_high["Year"]<-"2017"
+df_doge_2017_high$Year <- as.factor(df_doge_2017_high$Year)
+
+
+
+df_doge_2017_f <- inner_join(df_doge_2017_meanprice,df_doge_2017_vol)
+
+
+df_doge_2017_f <- inner_join(df_doge_2017_f, df_doge_2017_high)
+
+df_doge_2017_f <- df_doge_2017_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# doge 2018
+
+
+df_doge_2018 <- df_doge  %>%  filter((df_doge$Date < "2019-01-01" ) & (df_doge$Date > "2017-12-31"))
+
+
+df_doge_2018_meanprice<-   df_doge_2018 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_doge_2018_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_doge_2018_meanprice["Year"]<-"2018"
+df_doge_2018_meanprice$Year <- as.factor(df_doge_2018_meanprice$Year)
+
+
+
+
+df_doge_2018_vol<-   df_doge_2018 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_doge_2018_vol) <- c("AssetID", "Volume")
+
+#datatable(df_doge, options = list(pageLength = 10))
+
+df_doge_2018_vol["Year"]<-"2018"
+df_doge_2018_vol$Year <- as.factor(df_doge_2018_vol$Year)
+
+
+
+
+df_doge_2018_high<-   df_doge_2018 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_doge_2018_high) <- c("AssetID", "High")
+
+#datatable(df_doge, options = list(pageLength = 10))
+
+df_doge_2018_high["Year"]<-"2018"
+df_doge_2018_high$Year <- as.factor(df_doge_2018_high$Year)
+
+
+
+df_doge_2018_f <- inner_join(df_doge_2018_meanprice,df_doge_2018_vol)
+
+
+
+df_doge_2018_f <- inner_join(df_doge_2018_f,df_doge_2018_high)
+
+
+df_doge_2018_f <- df_doge_2018_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# doge 2019
+# for making mean volume column : 
+
+
+df_doge_2019 <- df_doge  %>%  filter((df_doge$Date < "2020-01-01" ) & (df_doge$Date > "2018-12-31"))
+
+
+df_doge_2019_meanprice<-   df_doge_2019 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_doge_2019_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_doge_2019_meanprice["Year"]<-"2019"
+df_doge_2019_meanprice$Year <- as.factor(df_doge_2019_meanprice$Year)
+
+
+
+
+df_doge_2019_vol<-   df_doge_2019 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_doge_2019_vol) <- c("AssetID", "Volume")
+
+#datatable(df_doge, options = list(pageLength = 10))
+
+df_doge_2019_vol["Year"]<-"2019"
+df_doge_2019_vol$Year <- as.factor(df_doge_2019_vol$Year)
+
+
+
+
+df_doge_2019_high<-   df_doge_2019 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_doge_2019_high) <- c("AssetID", "High")
+
+#datatable(df_doge, options = list(pageLength = 10))
+
+df_doge_2019_high["Year"]<-"2019"
+df_doge_2019_high$Year <- as.factor(df_doge_2019_high$Year)
+
+
+
+df_doge_2019_f <- inner_join(df_doge_2019_meanprice,df_doge_2019_vol)
+
+
+
+df_doge_2019_f <- inner_join(df_doge_2019_f,df_doge_2019_high)
+
+
+df_doge_2019_f <- df_doge_2019_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# doge 2020
+# for making mean volume column : 
+
+
+df_doge_2020 <- df_doge  %>%  filter(df_doge$Date > "2019-12-31")
+
+
+
+df_doge_2020_meanprice<-   df_doge_2020 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_doge_2020_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_doge_2020_meanprice["Year"]<-"2020"
+df_doge_2020_meanprice$Year <- as.factor(df_doge_2020_meanprice$Year)
+
+
+
+
+df_doge_2020_vol<-   df_doge_2020 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_doge_2020_vol) <- c("AssetID", "Volume")
+
+#datatable(df_doge, options = list(pageLength = 10))
+
+df_doge_2020_vol["Year"]<-"2020"
+df_doge_2020_vol$Year <- as.factor(df_doge_2020_vol$Year)
+
+
+
+
+df_doge_2020_high<-   df_doge_2020 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_doge_2020_high) <- c("AssetID", "High")
+
+#datatable(df_doge, options = list(pageLength = 10))
+
+df_doge_2020_high["Year"]<-"2020"
+df_doge_2020_high$Year <- as.factor(df_doge_2020_high$Year)
+
+
+
+df_doge_2020_f <- inner_join(df_doge_2020_meanprice,df_doge_2020_vol)
+
+
+
+df_doge_2020_f <- inner_join(df_doge_2020_f,df_doge_2020_high)
+
+
+df_doge_2020_f <- df_doge_2020_f %>% relocate(MeanPrice,.after= Year)
+
+
+df_doge_final <- rbind(df_doge_2017_f,df_doge_2018_f,df_doge_2019_f,df_doge_2020_f)
+
+```
+
+
+
+### Row 
+------------------------------------
+
+### Average price comparison of Doge during the past four years: 
+
+```{r}
+
+fig_doge1 <- plot_ly(df_doge_final , x = ~Year, y = ~MeanPrice, type = 'bar') %>% add_trace(df_bitcoin_final , x = ~Year, y = ~MeanPrice, type = 'scatter',  mode = 'lines+markers')  %>% layout(title = "Mean Price Comparison of Doge" ,xaxis = list(title = "Year"), yaxis = list(title = " Mean High Price "))
+
+
+#fig_btc1 <- plot_ly(df_bitcoin_final , x = ~Year, y = ~MeanPrice, type = 'scatter', mode = "lines+markers") 
+
+
+
+
+fig_doge1
+```
+
+
+
+### Maximum High Achieved During Years
+
+```{r}
+
+
+fig_doge2 <- plot_ly(df_doge_final , x = ~Year, y = ~High, type = 'scatter', mode = "lines+markers")  %>% layout(title = "Maximum High Achieved During Years" ,xaxis = list(title = "Year"), yaxis = list(title = " Mean Volume Traded "))
+
+
+
+
+fig_doge2
+
+```
+
+TETHER
+=================================
+TETHER
+---------------------------------
+
+```{r}
+
+df_tether <- filter(data, data$AssetID =="tether")
+
+df_tether %>%  datatable(extensions = 'Buttons',
+            options = list(dom = 'Blfrtip',
+                           buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                           lengthMenu = list(c(10,25,50,-1),
+                                             c(10,25,50,"All"))))
+
+#datatable(df_tether, options = list(pageLength = 10))
+
+
+# CREATING DATAFRAME FOR tether 2017 , 2018, 2019,2020 separately for mean values and then merge it into single dataframe : 
+
+# tether 2017
+# for making mean volume column : 
+
+
+
+df_tether_2017 <- df_tether  %>%  filter(df_tether$Date < "2018-01-01" )
+
+
+# for making mean price column : 
+
+df_tether_2017_meanprice<-   df_tether_2017 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_tether_2017_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_tether_2017_meanprice["Year"]<-"2017"
+df_tether_2017_meanprice$Year <- as.factor(df_tether_2017_meanprice$Year)
+
+
+df_tether_2017_vol<-   df_tether_2017 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_tether_2017_vol) <- c("AssetID", "Volume")
+
+#datatable(df_tether, options = list(pageLength = 10))
+
+df_tether_2017_vol["Year"]<-"2017"
+df_tether_2017_vol$Year <- as.factor(df_tether_2017_vol$Year)
+
+
+
+# for making mean High column : 
+
+df_tether_2017_high<-   df_tether_2017 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_tether_2017_high) <- c("AssetID", "High")
+
+#datatable(df_tether, options = list(pageLength = 10))
+
+df_tether_2017_high["Year"]<-"2017"
+df_tether_2017_high$Year <- as.factor(df_tether_2017_high$Year)
+
+
+
+df_tether_2017_f <- inner_join(df_tether_2017_meanprice,df_tether_2017_vol)
+
+
+df_tether_2017_f <- inner_join(df_tether_2017_f, df_tether_2017_high)
+
+df_tether_2017_f <- df_tether_2017_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# tether 2018
+
+
+df_tether_2018 <- df_tether  %>%  filter((df_tether$Date < "2019-01-01" ) & (df_tether$Date > "2017-12-31"))
+
+
+df_tether_2018_meanprice<-   df_tether_2018 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_tether_2018_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_tether_2018_meanprice["Year"]<-"2018"
+df_tether_2018_meanprice$Year <- as.factor(df_tether_2018_meanprice$Year)
+
+
+
+
+df_tether_2018_vol<-   df_tether_2018 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_tether_2018_vol) <- c("AssetID", "Volume")
+
+#datatable(df_tether, options = list(pageLength = 10))
+
+df_tether_2018_vol["Year"]<-"2018"
+df_tether_2018_vol$Year <- as.factor(df_tether_2018_vol$Year)
+
+
+
+
+df_tether_2018_high<-   df_tether_2018 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_tether_2018_high) <- c("AssetID", "High")
+
+#datatable(df_tether, options = list(pageLength = 10))
+
+df_tether_2018_high["Year"]<-"2018"
+df_tether_2018_high$Year <- as.factor(df_tether_2018_high$Year)
+
+
+
+df_tether_2018_f <- inner_join(df_tether_2018_meanprice,df_tether_2018_vol)
+
+
+
+df_tether_2018_f <- inner_join(df_tether_2018_f,df_tether_2018_high)
+
+
+df_tether_2018_f <- df_tether_2018_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# tether 2019
+# for making mean volume column : 
+
+
+df_tether_2019 <- df_tether  %>%  filter((df_tether$Date < "2020-01-01" ) & (df_tether$Date > "2018-12-31"))
+
+
+df_tether_2019_meanprice<-   df_tether_2019 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_tether_2019_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_tether_2019_meanprice["Year"]<-"2019"
+df_tether_2019_meanprice$Year <- as.factor(df_tether_2019_meanprice$Year)
+
+
+
+
+df_tether_2019_vol<-   df_tether_2019 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_tether_2019_vol) <- c("AssetID", "Volume")
+
+#datatable(df_tether, options = list(pageLength = 10))
+
+df_tether_2019_vol["Year"]<-"2019"
+df_tether_2019_vol$Year <- as.factor(df_tether_2019_vol$Year)
+
+
+
+
+df_tether_2019_high<-   df_tether_2019 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_tether_2019_high) <- c("AssetID", "High")
+
+#datatable(df_tether, options = list(pageLength = 10))
+
+df_tether_2019_high["Year"]<-"2019"
+df_tether_2019_high$Year <- as.factor(df_tether_2019_high$Year)
+
+
+
+df_tether_2019_f <- inner_join(df_tether_2019_meanprice,df_tether_2019_vol)
+
+
+
+df_tether_2019_f <- inner_join(df_tether_2019_f,df_tether_2019_high)
+
+
+df_tether_2019_f <- df_tether_2019_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# tether 2020
+# for making mean volume column : 
+
+
+df_tether_2020 <- df_tether  %>%  filter(df_tether$Date > "2019-12-31")
+
+
+
+df_tether_2020_meanprice<-   df_tether_2020 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_tether_2020_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_tether_2020_meanprice["Year"]<-"2020"
+df_tether_2020_meanprice$Year <- as.factor(df_tether_2020_meanprice$Year)
+
+
+
+
+df_tether_2020_vol<-   df_tether_2020 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_tether_2020_vol) <- c("AssetID", "Volume")
+
+#datatable(df_tether, options = list(pageLength = 10))
+
+df_tether_2020_vol["Year"]<-"2020"
+df_tether_2020_vol$Year <- as.factor(df_tether_2020_vol$Year)
+
+
+
+
+df_tether_2020_high<-   df_tether_2020 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_tether_2020_high) <- c("AssetID", "High")
+
+#datatable(df_tether, options = list(pageLength = 10))
+
+df_tether_2020_high["Year"]<-"2020"
+df_tether_2020_high$Year <- as.factor(df_tether_2020_high$Year)
+
+
+
+df_tether_2020_f <- inner_join(df_tether_2020_meanprice,df_tether_2020_vol)
+
+
+
+df_tether_2020_f <- inner_join(df_tether_2020_f,df_tether_2020_high)
+
+
+df_tether_2020_f <- df_tether_2020_f %>% relocate(MeanPrice,.after= Year)
+
+
+df_tether_final <- rbind(df_tether_2017_f,df_tether_2018_f,df_tether_2019_f,df_tether_2020_f)
+
+
+
+```
+
+
+### Row 
+------------------------------------
+
+### Average price comparison of Tether during the past four years: 
+
+```{r}
+
+fig_tether1 <- plot_ly(df_tether_final , x = ~Year, y = ~MeanPrice, type = 'bar') %>% add_trace(df_tether_final , x = ~Year, y = ~MeanPrice, type = 'scatter',  mode = 'lines+markers')  %>% layout(title = "Mean Price Comparison of Tether" ,xaxis = list(title = "Year"), yaxis = list(title = " Mean High Price "))
+
+
+#fig_btc1 <- plot_ly(df_bitcoin_final , x = ~Year, y = ~MeanPrice, type = 'scatter', mode = "lines+markers") 
+
+
+
+
+fig_tether1
+```
+
+
+
+### Maximum High Achieved During Years
+
+```{r}
+
+
+fig_tether2 <- plot_ly(df_tether_final , x = ~Year, y = ~High, type = 'scatter', mode = "lines+markers")  %>% layout(title = "Maximum High Achieved During Years" ,xaxis = list(title = "Year"), yaxis = list(title = " Mean Volume Traded "))
+
+
+
+
+fig_tether2
+
+```
+
+XRP
+=================================
+XRP
+---------------------------------
+
+```{r}
+
+df_xrp <- filter(data, data$AssetID =="xrp")
+
+df_xrp %>%  datatable(extensions = 'Buttons',
+            options = list(dom = 'Blfrtip',
+                           buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                           lengthMenu = list(c(10,25,50,-1),
+                                             c(10,25,50,"All"))))
+
+
+#datatable(df_xrp, options = list(pageLength = 10))
+
+
+# CREATING DATAFRAME FOR xrp 2017 , 2018, 2019,2020 separately for mean values and then merge it into single dataframe : 
+
+# xrp 2017
+# for making mean volume column : 
+
+
+
+df_xrp_2017 <- df_xrp  %>%  filter(df_xrp$Date < "2018-01-01" )
+
+
+# for making mean price column : 
+
+df_xrp_2017_meanprice<-   df_xrp_2017 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_xrp_2017_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_xrp_2017_meanprice["Year"]<-"2017"
+df_xrp_2017_meanprice$Year <- as.factor(df_xrp_2017_meanprice$Year)
+
+
+df_xrp_2017_vol<-   df_xrp_2017 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_xrp_2017_vol) <- c("AssetID", "Volume")
+
+#datatable(df_xrp, options = list(pageLength = 10))
+
+df_xrp_2017_vol["Year"]<-"2017"
+df_xrp_2017_vol$Year <- as.factor(df_xrp_2017_vol$Year)
+
+
+
+# for making mean High column : 
+
+df_xrp_2017_high<-   df_xrp_2017 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_xrp_2017_high) <- c("AssetID", "High")
+
+#datatable(df_xrp, options = list(pageLength = 10))
+
+df_xrp_2017_high["Year"]<-"2017"
+df_xrp_2017_high$Year <- as.factor(df_xrp_2017_high$Year)
+
+
+
+df_xrp_2017_f <- inner_join(df_xrp_2017_meanprice,df_xrp_2017_vol)
+
+
+df_xrp_2017_f <- inner_join(df_xrp_2017_f, df_xrp_2017_high)
+
+df_xrp_2017_f <- df_xrp_2017_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# xrp 2018
+
+
+df_xrp_2018 <- df_xrp  %>%  filter((df_xrp$Date < "2019-01-01" ) & (df_xrp$Date > "2017-12-31"))
+
+
+df_xrp_2018_meanprice<-   df_xrp_2018 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_xrp_2018_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_xrp_2018_meanprice["Year"]<-"2018"
+df_xrp_2018_meanprice$Year <- as.factor(df_xrp_2018_meanprice$Year)
+
+
+
+
+df_xrp_2018_vol<-   df_xrp_2018 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_xrp_2018_vol) <- c("AssetID", "Volume")
+
+#datatable(df_xrp, options = list(pageLength = 10))
+
+df_xrp_2018_vol["Year"]<-"2018"
+df_xrp_2018_vol$Year <- as.factor(df_xrp_2018_vol$Year)
+
+
+
+
+df_xrp_2018_high<-   df_xrp_2018 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_xrp_2018_high) <- c("AssetID", "High")
+
+#datatable(df_xrp, options = list(pageLength = 10))
+
+df_xrp_2018_high["Year"]<-"2018"
+df_xrp_2018_high$Year <- as.factor(df_xrp_2018_high$Year)
+
+
+
+df_xrp_2018_f <- inner_join(df_xrp_2018_meanprice,df_xrp_2018_vol)
+
+
+
+df_xrp_2018_f <- inner_join(df_xrp_2018_f,df_xrp_2018_high)
+
+
+df_xrp_2018_f <- df_xrp_2018_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# xrp 2019
+# for making mean volume column : 
+
+
+df_xrp_2019 <- df_xrp  %>%  filter((df_xrp$Date < "2020-01-01" ) & (df_xrp$Date > "2018-12-31"))
+
+
+df_xrp_2019_meanprice<-   df_xrp_2019 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_xrp_2019_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_xrp_2019_meanprice["Year"]<-"2019"
+df_xrp_2019_meanprice$Year <- as.factor(df_xrp_2019_meanprice$Year)
+
+
+
+
+df_xrp_2019_vol<-   df_xrp_2019 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_xrp_2019_vol) <- c("AssetID", "Volume")
+
+#datatable(df_xrp, options = list(pageLength = 10))
+
+df_xrp_2019_vol["Year"]<-"2019"
+df_xrp_2019_vol$Year <- as.factor(df_xrp_2019_vol$Year)
+
+
+
+
+df_xrp_2019_high<-   df_xrp_2019 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_xrp_2019_high) <- c("AssetID", "High")
+
+#datatable(df_xrp, options = list(pageLength = 10))
+
+df_xrp_2019_high["Year"]<-"2019"
+df_xrp_2019_high$Year <- as.factor(df_xrp_2019_high$Year)
+
+
+
+df_xrp_2019_f <- inner_join(df_xrp_2019_meanprice,df_xrp_2019_vol)
+
+
+
+df_xrp_2019_f <- inner_join(df_xrp_2019_f,df_xrp_2019_high)
+
+
+df_xrp_2019_f <- df_xrp_2019_f %>% relocate(MeanPrice,.after= Year)
+
+
+
+# xrp 2020
+# for making mean volume column : 
+
+
+df_xrp_2020 <- df_xrp  %>%  filter(df_xrp$Date > "2019-12-31")
+
+
+
+df_xrp_2020_meanprice<-   df_xrp_2020 %>% group_by(AssetID) %>% summarise(mean(Price) ) 
+
+names(df_xrp_2020_meanprice) <- c("AssetID", "MeanPrice")
+
+
+df_xrp_2020_meanprice["Year"]<-"2020"
+df_xrp_2020_meanprice$Year <- as.factor(df_xrp_2020_meanprice$Year)
+
+
+
+
+df_xrp_2020_vol<-   df_xrp_2020 %>% group_by(AssetID) %>% summarise(mean(Vol.) ) 
+
+names(df_xrp_2020_vol) <- c("AssetID", "Volume")
+
+#datatable(df_xrp, options = list(pageLength = 10))
+
+df_xrp_2020_vol["Year"]<-"2020"
+df_xrp_2020_vol$Year <- as.factor(df_xrp_2020_vol$Year)
+
+
+
+
+df_xrp_2020_high<-   df_xrp_2020 %>% group_by(AssetID) %>% summarise(mean(High) ) 
+
+names(df_xrp_2020_high) <- c("AssetID", "High")
+
+#datatable(df_xrp, options = list(pageLength = 10))
+
+df_xrp_2020_high["Year"]<-"2020"
+df_xrp_2020_high$Year <- as.factor(df_xrp_2020_high$Year)
+
+
+
+df_xrp_2020_f <- inner_join(df_xrp_2020_meanprice,df_xrp_2020_vol)
+
+
+
+df_xrp_2020_f <- inner_join(df_xrp_2020_f,df_xrp_2020_high)
+
+
+df_xrp_2020_f <- df_xrp_2020_f %>% relocate(MeanPrice,.after= Year)
+
+
+df_xrp_final <- rbind(df_xrp_2017_f,df_xrp_2018_f,df_xrp_2019_f,df_xrp_2020_f)
+
+```
+
+
+### Row 
+------------------------------------
+
+### Average price comparison of Ethereum during the past four years: 
+
+```{r}
+
+fig_xrp1 <- plot_ly(df_xrp_final , x = ~Year, y = ~MeanPrice, type = 'bar') %>% add_trace(df_xrp_final , x = ~Year, y = ~MeanPrice, type = 'scatter',  mode = 'lines+markers')  %>% layout(title = "Mean Price Comparison of Ether" ,xaxis = list(title = "Year"), yaxis = list(title = " Mean High Price "))
+
+
+#fig_btc1 <- plot_ly(df_bitcoin_final , x = ~Year, y = ~MeanPrice, type = 'scatter', mode = "lines+markers") 
+
+
+
+
+fig_xrp1
+```
+
+
+
+### Maximum High Achieved During Years
+
+```{r}
+
+
+fig_xrp2 <- plot_ly(df_ether_final , x = ~Year, y = ~High, type = 'scatter', mode = "lines+markers")  %>% layout(title = "Maximum High Achieved During Years" ,xaxis = list(title = "Year"), yaxis = list(title = " Mean Volume Traded "))
+
+
+
+
+fig_xrp2
+
+```
